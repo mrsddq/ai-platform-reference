@@ -14,7 +14,7 @@ jobs:
     env:
       API_KEY: ci-local-only-synthetic-key
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
@@ -25,12 +25,13 @@ jobs:
           pytest -q
       - name: Build and start the local stack
         run: docker compose up --build --wait --wait-timeout 600
-      - name: Exercise ingestion and retrieval over HTTP
+      - name: Exercise ingestion and retrieval evaluation over HTTP
         run: |
           python - <<'PY'
           import json
           import os
           import urllib.request
+          from pathlib import Path
 
           base = "http://127.0.0.1:8000"
           assert urllib.request.urlopen(base + "/health/ready", timeout=10).status == 200
@@ -44,16 +45,19 @@ jobs:
               with urllib.request.urlopen(request, timeout=240) as response:
                   return json.load(response)
 
-          document = post("/documents", {
-              "source_id": "ci-synthetic-release",
-              "version": "v1",
-              "text": "The synthetic canary release requires a model artifact digest and an evaluation report before promotion.",
-          })
-          assert document["chunks"] >= 1
-          assert len(document["sha256"]) == 64
-          hits = post("/search", {"query": "What does the canary release require?", "limit": 3})["hits"]
-          assert hits and hits[0]["source_id"] == "ci-synthetic-release"
-          assert hits[0]["citation"]
+          for path in Path("sample_data").glob("*.txt"):
+              document = post("/documents", {
+                  "source_id": path.stem,
+                  "version": "v1",
+                  "text": path.read_text(encoding="utf-8"),
+              })
+              assert document["chunks"] >= 1 and len(document["sha256"]) == 64
+
+          for line in Path("evaluation/cases.jsonl").read_text(encoding="utf-8").splitlines():
+              case = json.loads(line)
+              hits = post("/search", {"query": case["question"], "limit": 3})["hits"]
+              assert hits and hits[0]["source_id"] == case["expected_source_id"]
+              assert hits[0]["citation"]
           assert urllib.request.urlopen(base + "/metrics", timeout=10).status == 200
           PY
       - name: Show container logs on failure
@@ -62,7 +66,7 @@ jobs:
       - name: Stop local stack
         if: always()
         run: docker compose down -v
-      - uses: azure/setup-helm@v4.3.1
+      - uses: azure/setup-helm@v5
         with:
           version: v3.19.0
       - name: Validate Helm templates

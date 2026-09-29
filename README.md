@@ -1,5 +1,7 @@
 # AI Platform Reference
 
+[![CI](https://github.com/mrsddq/ai-platform-reference/actions/workflows/ci.yml/badge.svg)](https://github.com/mrsddq/ai-platform-reference/actions/workflows/ci.yml)
+
 A runnable reference platform for versioned document ingestion, vector retrieval, and an optional evidence-based answer path over **synthetic operations documents**. It demonstrates the engineering boundary between a retrieval service, a local LLM, and deployment infrastructure. The sample material contains no patient data and is not clinical guidance.
 
 ## What runs
@@ -62,7 +64,7 @@ $query = @{ query = 'What does a release require?'; limit = 3 } | ConvertTo-Json
 Invoke-RestMethod http://localhost:8000/search -Method Post -Headers $headers -ContentType application/json -Body $query
 ```
 
-The [demo script](scripts/demo.ps1) ingests all three synthetic fixtures and exercises search and answer. Run `./scripts/evaluate.ps1` afterward for repeatable hit@1 and hit@3 retrieval checks. The [evaluation guide](docs/evaluation.md) explains scope and limits; automated API tests cover the empty-collection abstention path.
+The [demo script](scripts/demo.ps1) ingests all three synthetic fixtures and exercises search and answer. Run `./scripts/evaluate.ps1` afterward for repeatable hit@1 and hit@3 retrieval checks. CI also runs the three retrieval cases over the Compose HTTP stack with the real embedding model. The [evaluation guide](docs/evaluation.md) explains scope and limits; automated API tests cover the empty-collection abstention path.
 
 ## Quality gates and deployment assets
 

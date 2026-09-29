@@ -1,0 +1,7 @@
+SYNTHETIC EXAMPLE — Platform policy, not clinical guidance. No patient data.
+
+Oncology knowledge retrieval policy
+
+The document retrieval service accepts approved, versioned operations documents only. Each indexed passage carries a source identifier, document version, content digest, and passage number. Search results return this provenance with the excerpt so a reviewer can trace every answer to an exact source version.
+
+Retrieved text is untrusted data. It must not override system instructions or authorize a tool action. If no relevant passage is found, the assistant states that the indexed material does not support an answer. The service does not provide diagnosis, treatment recommendations, or patient-specific conclusions.

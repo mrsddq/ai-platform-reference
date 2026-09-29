@@ -1,0 +1,7 @@
+SYNTHETIC EXAMPLE — Operations documentation, not clinical guidance. No patient data.
+
+Oncology model release checklist
+
+The imaging triage model is a demonstration service. Before a release, the platform operator records the model artifact digest, data snapshot identifier, training configuration, evaluation report, approver, and deployment image digest. A release is blocked when the evaluation gate fails or the artifact identity does not match the serving configuration.
+
+A canary rollout routes a small fraction of synthetic requests to the candidate deployment. Operators compare request error rate and p95 inference latency with the current deployment. Rollback restores the previous image and model artifact as one versioned unit. The operations team documents the decision and timestamp in the release record.

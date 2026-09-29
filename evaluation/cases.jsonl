@@ -1,0 +1,3 @@
+{"id":"release-metadata","question":"Which identifiers must the platform operator record before releasing a model?","expected_source_id":"oncology_model_release"}
+{"id":"incident-triage","question":"What should on-call check when vector search latency rises?","expected_source_id":"oncology_platform_incident"}
+{"id":"retrieval-policy","question":"How can a reviewer trace an answer to a document version?","expected_source_id":"oncology_retrieval_policy"}

@@ -1,0 +1,17 @@
+.git
+.github
+.venv
+.env
+__pycache__
+.pytest_cache
+.ruff_cache
+*.pyc
+*.egg-info
+.terraform
+terraform.tfstate*
+*.tfplan
+model_cache
+tests
+docs
+deploy
+infra

@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      API_KEY: ci-local-only-synthetic-key
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Install and test the API
+        run: |
+          python -m pip install -e '.[dev]'
+          ruff check .
+          pytest -q
+      - name: Build and start the local stack
+        run: docker compose up --build --wait --wait-timeout 600
+      - name: Exercise ingestion and retrieval over HTTP
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import urllib.request
+
+          base = "http://127.0.0.1:8000"
+          assert urllib.request.urlopen(base + "/health/ready", timeout=10).status == 200
+
+          def post(path, payload):
+              request = urllib.request.Request(
+                  base + path,
+                  data=json.dumps(payload).encode(),
+                  headers={"Content-Type": "application/json", "X-API-Key": os.environ["API_KEY"]},
+              )
+              with urllib.request.urlopen(request, timeout=240) as response:
+                  return json.load(response)
+
+          document = post("/documents", {
+              "source_id": "ci-synthetic-release",
+              "version": "v1",
+              "text": "The synthetic canary release requires a model artifact digest and an evaluation report before promotion.",
+          })
+          assert document["chunks"] >= 1
+          assert len(document["sha256"]) == 64
+          hits = post("/search", {"query": "What does the canary release require?", "limit": 3})["hits"]
+          assert hits and hits[0]["source_id"] == "ci-synthetic-release"
+          assert hits[0]["citation"]
+          assert urllib.request.urlopen(base + "/metrics", timeout=10).status == 200
+          PY
+      - name: Show container logs on failure
+        if: failure()
+        run: docker compose logs --no-color
+      - name: Stop local stack
+        if: always()
+        run: docker compose down -v
+      - uses: azure/setup-helm@v4.3.1
+        with:
+          version: v3.19.0
+      - name: Validate Helm templates
+        run: |
+          helm lint deploy/helm/ai-platform
+          helm template smoke deploy/helm/ai-platform > /dev/null
+          helm template smoke deploy/helm/ai-platform --set autoscaling.enabled=true > /dev/null
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: "1.14.6"
+      - name: Validate Terraform without cloud credentials
+        run: |
+          terraform -chdir=infra/terraform fmt -check
+          terraform -chdir=infra/terraform init -backend=false -input=false
+          terraform -chdir=infra/terraform validate

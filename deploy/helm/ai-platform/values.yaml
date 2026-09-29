@@ -1,0 +1,36 @@
+replicaCount: 2
+
+image:
+  repository: ghcr.io/replace-me/ai-platform-reference
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
+
+config:
+  # Install Qdrant separately (or use a managed private endpoint).
+  qdrantUrl: http://qdrant:6333
+  collection: evidence
+  embeddingModel: BAAI/bge-small-en-v1.5
+  ollamaUrl: ""
+  ollamaModel: qwen2.5:3b
+
+# Create this Secret separately with an "api-key" key. Never commit its value.
+apiKeySecretName: ai-platform-api-key
+# Optional: a separate Secret with a "qdrant-api-key" key.
+qdrantApiKeySecretName: ""
+
+service:
+  port: 8000
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: "2"
+    memory: 2Gi
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70

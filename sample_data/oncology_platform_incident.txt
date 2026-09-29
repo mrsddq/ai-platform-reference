@@ -1,0 +1,7 @@
+SYNTHETIC EXAMPLE — Incident exercise, not clinical guidance. No patient data.
+
+Oncology AI platform incident drill
+
+A synthetic alert reports that vector search latency exceeded its threshold during a load test. The on-call engineer checks readiness, search error rate, request volume, vector-store health, and recent deployment changes. The engineer pauses ingestion if it competes with online search for capacity, then restores service or rolls back the latest deployment.
+
+The incident record includes onset time, affected service, a timeline of actions, mitigation, recovery confirmation, and a root-cause follow-up. Logs and traces contain request identifiers and source identifiers only; they do not include raw document text or patient information. The post-incident review links the relevant dashboard and runbook revision.
